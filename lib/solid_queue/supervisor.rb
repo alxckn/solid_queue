@@ -93,6 +93,7 @@ module SolidQueue
       end
 
       def terminate_gracefully
+        puts "#{self.name} terminate_gracefully"
         SolidQueue.instrument(:graceful_termination, process_id: process_id, supervisor_pid: ::Process.pid, supervised_processes: supervised_processes) do |payload|
           term_forks
 
@@ -134,6 +135,7 @@ module SolidQueue
       end
 
       def quit_forks
+        puts "#{self.name} quitting: #{forks.keys}"
         signal_processes(forks.keys, :QUIT)
       end
 
@@ -151,6 +153,7 @@ module SolidQueue
           pid, status = ::Process.waitpid2(-1, ::Process::WNOHANG)
           break unless pid
 
+          puts "#{self.name} reaping #{pid}, #{status}"
           if (terminated_fork = forks.delete(pid)) && (!status.exited? || status.exitstatus > 0)
             handle_claimed_jobs_by(terminated_fork, status)
           end
