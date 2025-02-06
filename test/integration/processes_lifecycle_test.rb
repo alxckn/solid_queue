@@ -125,6 +125,8 @@ class ProcessesLifecycleTest < ActiveSupport::TestCase
 
     wait_while_with_timeout(1.second) { SolidQueue::ReadyExecution.count > 0 }
 
+    sleep(0.5.second)
+
     signal_process(@pid, :TERM, wait: 0.5)
 
     sleep(SolidQueue.shutdown_timeout + 0.5.second)
