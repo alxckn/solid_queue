@@ -320,7 +320,7 @@ class ProcessesLifecycleTest < ActiveSupport::TestCase
       # might have been deleted in the forked processes.
       skip_active_record_query_cache do
         job = SolidQueue::Job.find_by(active_job_id: active_job.job_id)
-        assert job.public_send("#{status}?")
+        assert_equal status, job.status
       end
     end
 end
