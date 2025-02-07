@@ -20,6 +20,8 @@ loader.setup
 module SolidQueue
   extend self
 
+  ForkSafety # add fork safety hooks
+
   DEFAULT_LOGGER = ActiveSupport::Logger.new($stdout)
 
   mattr_accessor :logger, default: DEFAULT_LOGGER
