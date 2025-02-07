@@ -26,14 +26,18 @@ end
 Logger::LogDevice.prepend(BlockLogDeviceTimeoutExceptions)
 class ExpectedTestError < RuntimeError; end
 
-ActiveSupport::Notifications.subscribe(/solid_queue$/) do |event|
-  event.name          # => "render"
-  event.duration      # => 10 (in milliseconds)
-  event.payload       # => { extra: :information }
-  event.allocations   # => 1826 (objects)
-
+ActiveSupport::Notifications.subscribe('register_process.solid_queue') do |event|
   puts "#{event.name} | #{event.duration} | #{event.payload}"
 end
+ActiveSupport::Notifications.subscribe('start_process.solid_queue') do |event|
+  puts "#{event.name} | #{event.duration} | #{event.payload[:process].name} | id=#{event.payload[:process].instance_variable_get(:@process).id},pid=#{event.payload[:process].pid}"
+end
+ActiveSupport::Notifications.subscribe('claim.solid_queue') do |event|
+  puts "#{event.name} | #{event.duration} | #{event.payload}"
+end
+# ActiveSupport::Notifications.subscribe(/solid_queue$/) do |event|
+#   puts "#{event.name}?"
+# end
 
 
 class ActiveSupport::TestCase
