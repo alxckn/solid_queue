@@ -121,9 +121,9 @@ class ProcessesLifecycleTest < ActiveSupport::TestCase
 
   test "term supervisor exceeding timeout while there are jobs in-flight" do
     no_pause = enqueue_store_result_job("no pause")
-    puts "no_pause job | id=#{get_job_id(no_pause)}"
+    puts "no_pause job | id=#{get_job(no_pause).id}"
     pause = enqueue_store_result_job("pause", pause: SolidQueue.shutdown_timeout + 10.second)
-    puts "pause job | id=#{get_job_id(pause)}"
+    puts "pause job | id=#{get_job(pause).id}"
 
     wait_while_with_timeout(1.second) { SolidQueue::ReadyExecution.count > 0 }
 
@@ -133,11 +133,13 @@ class ProcessesLifecycleTest < ActiveSupport::TestCase
     sleep(SolidQueue.shutdown_timeout + 0.5.second)
 
     assert_completed_job_results("no pause")
+    puts "no_pause statuses #{get_job(no_pause).statuses}"
     assert_job_status(no_pause, :finished)
 
     # This job was left claimed as the worker was shutdown without
     # a chance to terminate orderly
     assert_started_job_result("pause")
+    puts "pause statuses #{get_job(pause).statuses}"
     assert_job_status(pause, :claimed)
 
     # The process running the long job couldn't deregister, the other did
@@ -303,9 +305,9 @@ class ProcessesLifecycleTest < ActiveSupport::TestCase
       StoreResultJob.set(queue: queue_name).perform_later(value, **options)
     end
 
-    def get_job_id(active_job)
+    def get_job(active_job)
       skip_active_record_query_cache do
-        SolidQueue::Job.find_by(active_job_id: active_job.job_id).id
+        SolidQueue::Job.find_by(active_job_id: active_job.job_id)
       end
     end
 

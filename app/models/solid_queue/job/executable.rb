@@ -87,6 +87,12 @@ module SolidQueue
         finished_at.present?
       end
 
+      def statuses
+        %w[ ready claimed failed ].filter_map do |status|
+          public_send("#{status}_execution").present? ? status : nil
+        end
+      end
+
       def status
         if finished?
           :finished
