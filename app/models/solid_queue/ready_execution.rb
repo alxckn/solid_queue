@@ -38,6 +38,7 @@ module SolidQueue
 
           SolidQueue::ClaimedExecution.claiming(executions.map(&:job_id), process_id) do |claimed|
             ids_to_delete = executions.index_by(&:job_id).values_at(*claimed.map(&:job_id)).map(&:id)
+            puts "Deleting ready_executions #{ids_to_delete}"
             where(id: ids_to_delete).delete_all
           end
         end

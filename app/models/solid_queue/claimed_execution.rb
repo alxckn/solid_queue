@@ -18,6 +18,7 @@ class SolidQueue::ClaimedExecution < SolidQueue::Execution
       SolidQueue.instrument(:claim, process_id: process_id, job_ids: job_ids) do |payload|
         insert_all!(job_data)
         where(job_id: job_ids, process_id: process_id).load.tap do |claimed|
+          puts "claimed executions added: #{claimed.map(&:id)}"
           block.call(claimed)
 
           payload[:size] = claimed.size
@@ -101,6 +102,7 @@ class SolidQueue::ClaimedExecution < SolidQueue::Execution
     def finished
       transaction do
         job.finished!
+        puts "Removing claimed execution id=#{id},job_id=#{job_id}"
         destroy!
       end
     end
