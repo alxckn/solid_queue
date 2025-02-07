@@ -125,6 +125,7 @@ class ProcessesLifecycleTest < ActiveSupport::TestCase
 
     wait_while_with_timeout(1.second) { SolidQueue::ReadyExecution.count > 0 }
 
+    sleep(2)
     puts "Signaling TERM"
     signal_process(@pid, :TERM, wait: 0.5)
 
