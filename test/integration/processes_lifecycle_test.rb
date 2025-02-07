@@ -121,9 +121,9 @@ class ProcessesLifecycleTest < ActiveSupport::TestCase
 
   test "term supervisor exceeding timeout while there are jobs in-flight" do
     no_pause = enqueue_store_result_job("no pause")
-    puts "no_pause job | id=#{no_pause.id}"
+    puts "no_pause job | id=#{get_job_id(no_pause)}"
     pause = enqueue_store_result_job("pause", pause: SolidQueue.shutdown_timeout + 10.second)
-    puts "pause job | id=#{pause.id}"
+    puts "pause job | id=#{get_job_id(pause)}"
 
     wait_while_with_timeout(1.second) { SolidQueue::ReadyExecution.count > 0 }
 
@@ -301,6 +301,12 @@ class ProcessesLifecycleTest < ActiveSupport::TestCase
 
     def enqueue_store_result_job(value, queue_name = :background, **options)
       StoreResultJob.set(queue: queue_name).perform_later(value, **options)
+    end
+
+    def get_job_id(active_job)
+      skip_active_record_query_cache do
+        SolidQueue::Job.find_by(active_job_id: active_job.job_id).id
+      end
     end
 
     def assert_completed_job_results(value, queue_name = :background, count = 1)
