@@ -26,6 +26,15 @@ end
 Logger::LogDevice.prepend(BlockLogDeviceTimeoutExceptions)
 class ExpectedTestError < RuntimeError; end
 
+ActiveSupport::Notifications.subscribe(/solid_queue$/) do |event|
+  event.name          # => "render"
+  event.duration      # => 10 (in milliseconds)
+  event.payload       # => { extra: :information }
+  event.allocations   # => 1826 (objects)
+
+  puts "#{event.name} | #{event.duration} | #{event.payload}"
+end
+
 
 class ActiveSupport::TestCase
   include ConfigurationTestHelper, ProcessesTestHelper, JobsTestHelper
