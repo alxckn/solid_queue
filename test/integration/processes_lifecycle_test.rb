@@ -132,7 +132,7 @@ class ProcessesLifecycleTest < ActiveSupport::TestCase
     puts "Signaling TERM"
     signal_process(@pid, :TERM, wait: 0.5)
 
-    sleep(SolidQueue.shutdown_timeout + 0.5.second)
+    sleep(SolidQueue.shutdown_timeout + 0.1.second)
 
     assert_completed_job_results("no pause")
     puts "no_pause statuses #{get_job(no_pause).statuses}"
