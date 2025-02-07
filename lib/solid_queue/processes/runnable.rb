@@ -19,8 +19,12 @@ module SolidQueue::Processes
     def stop
       super
 
+      puts "#{self.name} stopping"
+
       wake_up
       @thread&.join
+
+      puts "#{self.name} stopped"
     end
 
     private

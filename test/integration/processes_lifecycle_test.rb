@@ -121,20 +121,27 @@ class ProcessesLifecycleTest < ActiveSupport::TestCase
 
   test "term supervisor exceeding timeout while there are jobs in-flight" do
     no_pause = enqueue_store_result_job("no pause")
+    puts "no_pause job | id=#{get_job(no_pause).id}"
+    puts "no_pause statuses #{get_job(no_pause).statuses}"
     pause = enqueue_store_result_job("pause", pause: SolidQueue.shutdown_timeout + 10.second)
+    puts "pause job | id=#{get_job(pause).id}"
+    puts "pause statuses #{get_job(pause).statuses}"
 
     wait_while_with_timeout(1.second) { SolidQueue::ReadyExecution.count > 0 }
 
+    puts "Signaling TERM"
     signal_process(@pid, :TERM, wait: 0.5)
 
-    sleep(SolidQueue.shutdown_timeout + 0.5.second)
+    sleep(SolidQueue.shutdown_timeout + 0.1.second)
 
     assert_completed_job_results("no pause")
+    puts "no_pause statuses #{get_job(no_pause).statuses}"
     assert_job_status(no_pause, :finished)
 
     # This job was left claimed as the worker was shutdown without
     # a chance to terminate orderly
     assert_started_job_result("pause")
+    puts "pause statuses #{get_job(pause).statuses}"
     assert_job_status(pause, :claimed)
 
     # The process running the long job couldn't deregister, the other did
@@ -300,6 +307,12 @@ class ProcessesLifecycleTest < ActiveSupport::TestCase
       StoreResultJob.set(queue: queue_name).perform_later(value, **options)
     end
 
+    def get_job(active_job)
+      skip_active_record_query_cache do
+        SolidQueue::Job.find_by(active_job_id: active_job.job_id)
+      end
+    end
+
     def assert_completed_job_results(value, queue_name = :background, count = 1)
       skip_active_record_query_cache do
         assert_equal count, JobResult.where(queue_name: queue_name, status: "completed", value: value).count
@@ -320,7 +333,7 @@ class ProcessesLifecycleTest < ActiveSupport::TestCase
       # might have been deleted in the forked processes.
       skip_active_record_query_cache do
         job = SolidQueue::Job.find_by(active_job_id: active_job.job_id)
-        assert job.public_send("#{status}?")
+        assert_equal status, job.status
       end
     end
 end

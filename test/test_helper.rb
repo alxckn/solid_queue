@@ -26,6 +26,21 @@ end
 Logger::LogDevice.prepend(BlockLogDeviceTimeoutExceptions)
 class ExpectedTestError < RuntimeError; end
 
+ActiveSupport::Notifications.subscribe('register_process.solid_queue') do |event|
+  puts "#{event.name} | #{event.duration} | #{event.payload}"
+end
+ActiveSupport::Notifications.subscribe('start_process.solid_queue') do |event|
+  puts "#{event.name} | #{event.duration} | #{event.payload[:process].name} | id=#{event.payload[:process].instance_variable_get(:@process).id},pid=#{event.payload[:process].pid}"
+end
+ActiveSupport::Notifications.subscribe('claim.solid_queue') do |event|
+  puts "#{event.name} | #{event.duration} | #{event.payload}"
+end
+# ActiveSupport::Notifications.subscribe(/solid_queue$/) do |event|
+#   puts "#{event.name}?"
+# end
+ActiveRecord::Base.logger = Logger.new STDOUT
+SolidQueue.silence_polling = false
+
 
 class ActiveSupport::TestCase
   include ConfigurationTestHelper, ProcessesTestHelper, JobsTestHelper
