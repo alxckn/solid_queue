@@ -38,6 +38,8 @@ end
 # ActiveSupport::Notifications.subscribe(/solid_queue$/) do |event|
 #   puts "#{event.name}?"
 # end
+ActiveRecord::Base.logger = Logger.new STDOUT
+SolidQueue.silence_polling = false
 
 
 class ActiveSupport::TestCase
